@@ -1,5 +1,7 @@
 # OpenCode 快速入门
 
+# 安装配置
+
 ---
 
 ## 1. 安装
@@ -103,48 +105,19 @@ opencode upgrade 1.4.6
 
 [模型市场](https://panshi.rnd.huawei.com/ocloudcommonwebsite/index.html#/aiResources/model/market)
 
-### 常用路径
-
-**通用格式**：
-
-- 全局：`~/.config/opencode/`
-- 项目级：`.opencode/`
-
-| 类型       | 全局路径                               | 项目路径              |
-| ---------- | -------------------------------------- | --------------------- |
-| 主配置     | `~/.config/opencode/opencode.json`     | `./opencode.json`     |
-| Skills     | `~/.config/opencode/skills/`           | `.opencode/skills/`   |
-| Agents     | `~/.config/opencode/agents/`           | `.opencode/agents/`   |
-| Commands   | `~/.config/opencode/commands/`         | `.opencode/commands/` |
-| Plugins    | `~/.config/opencode/plugins/`          | `.opencode/plugins/`  |
-| Themes     | `~/.config/opencode/themes/`           | `.opencode/themes/`   |
-| MCP        | 在 `opencode.json` 的 `mcp` 字段中配置 | 同左                  |
-| 缓存       | ~/.cache/opencode                      |                       |
-| 持久化数据 | ~/.local/share/opencode                |                       |
-
-> 注意：配置文件是**合并**的，项目配置 > 全局配置 > 远程配置
->
-> MCP 凭据存储在：`~/.local/share/opencode/mcp-auth.json`
-
 ---
 
-## 3. 基础操作
+# 基础操作
 
 > 建议进入项目目录后再启动opencode
+
+
 
 | 符号 | 作用     | 示例                            |
 | :--- | :------- | :------------------------------ |
 | `@`  | 引用文件 | `@src/main.ts 这个文件做了什么` |
 | `!`  | 执行命令 | `!ls -la` 查看目录              |
 | `/`  | 斜杠命令 | `/help` 查看帮助                |
-
-### 引用文件
-
-![image-20260424171747003](http://image.huawei.com/tiny-lts/v1/images/hi3ms/e3ea21d3492a6bfd02c9ac84de748716_784x165.png)
-
-### 执行命令
-
-![image-20260424171702255](http://image.huawei.com/tiny-lts/v1/images/hi3ms/f44c3e197e28b7544f4e07e18d2d4aa3_589x301.png)
 
 ### 斜杠命令
 
@@ -157,17 +130,18 @@ opencode upgrade 1.4.6
 | `/init`     | 初始化项目（创建 AGENTS.md） |
 | `/compact`  | 压缩上下文，释放 Token       |
 
+### 常用快捷键
 
-
-### 快捷键
-
-| 快捷键   | 作用                 |
-| :------- | :------------------- |
-| Tab      | 切换 Plan/Build 模式 |
-| Ctrl+C   | 中断当前操作         |
-| Ctrl+X Y | 复制最后一条消息     |
-| Ctrl+X N | 新建会话             |
-| Esc      | 取消/返回            |
+| 快捷键      | 作用             |
+| :---------- | :--------------- |
+| Tab         | 切换Agent        |
+| Shift+Enter | 换行（不发送）   |
+| Ctrl+C      | 中断当前操作     |
+| Ctrl+X Y    | 复制最后一条消息 |
+| Ctrl+X N    | 新建会话         |
+| Ctrl+X L    | 打开会话列表     |
+| Ctrl+X M    | 切换模型         |
+| Esc         | 取消/返回        |
 
 ## 4. 原子能力
 
@@ -376,6 +350,63 @@ SHELL=D:\App\Git\usr\bin\bash.exe
 | `/init`     | 初始化项目（创建 AGENTS.md） |
 | `/compact`  | 压缩上下文，释放 Token       |
 | `/copy`     | 复制整个会话内容到粘贴板     |
+
+#### 会话相关
+
+| 命令        | 作用                             |
+| :---------- | :------------------------------- |
+| `/new`      | 新建会话                         |
+| `/sessions` | 查看并切换会话                   |
+| `/undo`     | 撤销上一步操作(实测仅撤销了消息) |
+| `/redo`     | 重做被撤销的操作                 |
+| `/compact`  | 压缩上下文                       |
+| `/export`   | 导出对话记录                     |
+| `/share`    | 分享会话（生成链接）             |
+
+### 快捷键手册
+
+| 快捷键      | 作用             |
+| :---------- | :--------------- |
+| Tab         | 切换Agent        |
+| Shift+Enter | 换行（不发送）   |
+| Ctrl+C      | 中断当前操作     |
+| Ctrl+X Y    | 复制最后一条消息 |
+| Ctrl+X N    | 新建会话         |
+| Ctrl+X L    | 打开会话列表     |
+| Ctrl+X M    | 切换模型         |
+| Esc         | 中断 AI 响应     |
+| Ctrl+X U    | 撤销消息         |
+| Ctrl+X R    | 重做消息         |
+| Ctrl+X C    | 压缩上下文       |
+| Ctrl+X B    | 切换侧边栏       |
+| Ctrl+X T    | 切换主题         |
+| Ctrl+P      | 命令面板         |
+| Ctrl+A      | 跳到行首         |
+| Ctrl+E      | 跳到行尾         |
+| Ctrl+K      | 删除光标到行尾   |
+| Ctrl+U      | 删除光标到行首   |
+| Ctrl+W      | 删除上一个单词   |
+| Alt+B       | 后退一个单词     |
+| Alt+F       | 前进一个单词     |
+
+### 常用路径
+
+**通用格式**：
+
+- 全局：`~/.config/opencode/`
+- 项目级：`.opencode/`
+
+| 类型       | 全局路径                               | 项目路径              |
+| ---------- | -------------------------------------- | --------------------- |
+| 主配置     | `~/.config/opencode/opencode.json`     | `./opencode.json`     |
+| Skills     | `~/.config/opencode/skills/`           | `.opencode/skills/`   |
+| Agents     | `~/.config/opencode/agents/`           | `.opencode/agents/`   |
+| Commands   | `~/.config/opencode/commands/`         | `.opencode/commands/` |
+| Plugins    | `~/.config/opencode/plugins/`          | `.opencode/plugins/`  |
+| Themes     | `~/.config/opencode/themes/`           | `.opencode/themes/`   |
+| MCP        | 在 `opencode.json` 的 `mcp` 字段中配置 | 同左                  |
+| 缓存       | ~/.cache/opencode                      |                       |
+| 持久化数据 | ~/.local/share/opencode                |                       |
 
 ## 参考链接
 
