@@ -43,11 +43,11 @@ opencode upgrade 1.4.6
 
 ---
 
-## 2. 基础配置
+## 2. 配置
 
 > **内网使用建议**：关闭免费模型，避免调用
 
-### 完整配置参考
+### 基础配置参考
 
 ```json
 {
@@ -101,6 +101,121 @@ opencode upgrade 1.4.6
 }
 ```
 
+### 完整配置参考
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  
+  // === 供应商 ===
+  "provider": {
+    "local": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "local",
+      "options": {
+        "baseURL": "https://oneapi.rnd.huawei.com/v1",
+        "apiKey": ""
+      },
+      "models": {
+        "GLM-4.7-w8a8-MAE-M": {
+          "name": "GLM-4.7-w8a8-MAE-M"
+        }
+      }
+    },
+    "anthropic": {
+      "options": {
+        // 可以使用环境变量
+        "apiKey": "{env:ANTHROPIC_API_KEY}",
+        "timeout": 600000,
+        "setCacheKey": true
+      }
+    }
+  },
+  "disabled_providers": ["gemini"],
+  "enabled_providers": [
+    "local",
+    "w3",
+    "cm"
+  ],
+
+  // === 用户 ===
+  "username": "开发者",
+  
+  // === 界面 ===
+  "theme": "catppuccin",
+  "tui": {
+    "scroll_speed": 3,
+    "diff_style": "auto"
+  },
+  "keybinds": {
+    "leader": "ctrl+x",
+    "session_new": "<leader>n"
+  },
+  
+  // === 服务器 ===
+  "server": {
+    "port": 4096,
+    "hostname": "0.0.0.0"
+  },
+  
+  // === 行为 ===
+  "share": "disabled",
+  "compaction": {
+    "auto": true,
+     // 删除旧工具输出节省 token
+    "prune": true,
+	"reserved": 10000
+  },
+  "autoupdate": false,
+  "watcher": {
+     //  glob 语法排除噪声目录
+    "ignore": ["node_modules/**", "dist/**"]
+  },
+   // 与 AGENTS.md 合并
+  "instructions": ["CONTRIBUTING.md"],
+  
+  // === 权限 ===
+  "permission": {
+    "edit": "ask",
+    "bash": {
+      "*": "ask",
+      "git *": "allow"
+    }
+  },
+  
+  // === Agent ===
+  "agent": {
+    "code-reviewer": {
+      "description": "代码审查专家",
+      "mode": "subagent",
+       // 值越小输出越固定
+      "temperature": 0.2,
+      "permission": {
+        "edit": "deny"
+      }
+    }
+  },
+  
+  // === 命令 ===
+  "command": {
+    "test": {
+      "template": "运行测试",
+      "description": "运行测试套件",
+      "agent": "build"
+    }
+  },
+  
+  // === MCP ===
+  "mcp": {
+    "context7": {
+      "type": "local",
+      "command": ["npx", "-y", "@upstash/context7-mcp"]
+    }
+  },
+  "plugin": ["oh-my-openagent@latest"]
+}
+```
+
 ### 内部模型市场
 
 [模型市场](https://panshi.rnd.huawei.com/ocloudcommonwebsite/index.html#/aiResources/model/market)
@@ -111,7 +226,7 @@ opencode upgrade 1.4.6
 
 > 建议进入项目目录后再启动opencode
 
-
+## 符号操作
 
 | 符号 | 作用     | 示例                            |
 | :--- | :------- | :------------------------------ |
@@ -130,20 +245,7 @@ opencode upgrade 1.4.6
 | `/init`     | 初始化项目（创建 AGENTS.md） |
 | `/compact`  | 压缩上下文，释放 Token       |
 
-### 常用快捷键
-
-| 快捷键      | 作用             |
-| :---------- | :--------------- |
-| Tab         | 切换Agent        |
-| Shift+Enter | 换行（不发送）   |
-| Ctrl+C      | 中断当前操作     |
-| Ctrl+X Y    | 复制最后一条消息 |
-| Ctrl+X N    | 新建会话         |
-| Ctrl+X L    | 打开会话列表     |
-| Ctrl+X M    | 切换模型         |
-| Esc         | 取消/返回        |
-
-## 4. 原子能力
+## 原子能力
 
 > OpenCode 的主要内置工具
 
@@ -159,6 +261,105 @@ opencode upgrade 1.4.6
 | `question`  | 询问用户问题           |
 | `skill`     | 加载技能               |
 | `bash`      | 执行终端命令           |
+
+## 常用快捷键
+
+| 快捷键      | 作用             |
+| :---------- | :--------------- |
+| Tab         | 切换Agent        |
+| Shift+Enter | 换行（不发送）   |
+| Ctrl+C      | 中断当前操作     |
+| Ctrl+X Y    | 复制最后一条消息 |
+| Ctrl+X N    | 新建会话         |
+| Ctrl+X L    | 打开会话列表     |
+| Ctrl+X M    | 切换模型         |
+| Esc         | 取消/返回        |
+
+## 全局提示词
+
+### 什么时候用
+
+- 当你需要：让 AI 遵守一些固定的规则
+- 而且不想：每次对话都重复
+
+### 配置位置
+
+| 位置                             | 作用范围                 |
+| -------------------------------- | ------------------------ |
+| `项目根目录/AGENTS.md`           | 当前项目                 |
+| `项目根目录/CLAUDE.md`           | 兼容 Claude Code         |
+| `~/.config/opencode/AGENTS.md`   | 全局（所有项目）         |
+| `~/.claude/CLAUDE.md`            | 全局（兼容 Claude Code） |
+| `$OPENCODE_CONFIG_DIR/AGENTS.md` | 全局（通过环境变量指定） |
+
+### 加载顺序 
+
+> 按以下顺序加载，后加载的会**补充**（不是覆盖）前面的：
+
+```
+1. 全局 ~/.config/opencode/AGENTS.md
+2. 全局 ~/.claude/CLAUDE.md（兼容模式）
+3. 项目目录向上查找 AGENTS.md / CLAUDE.md
+4. 配置文件 instructions 指定的文件
+```
+
+**结果**：所有规则都会生效，合并在一起。
+
+### 举例
+
+```markdown
+## 代码质量原则
+- 优先代码可读性，做最简单的修改
+- 禁止使用 `eslint-disable` 或 `@ts-ignore` 绕过问题
+- 禁止使用 `any` 类型，必须定义明确的类型
+- 不要为了向后兼容而保留废弃代码
+- 删除未使用的代码，不要注释掉
+## 复用优先
+- 编写新代码前，先确认项目中是否已有类似实现
+- 优先复用现有组件和工具函数，而非新建
+```
+
+### 用 /init 自动生成全局提示词 
+
+> AI 会分析你的项目结构、技术栈、代码风格，自动生成一份 `AGENTS.md`
+
+## 初识Agent
+
+### 什么时候用
+
+- 让专业的Agent做专业的事，让Agent集中注意力做某件事。
+
+### 两种类型 
+
+| 类型                        | 说明                                                   | 调用方式        |
+| --------------------------- | ------------------------------------------------------ | --------------- |
+| **Primary Agent（主代理）** | 你直接对话的 Agent（Build、Plan）                      | Tab 切换        |
+| **Subagent（子代理）**      | 被主代理自动调用或你手动调用的专家（Explore、General） | `@agent名 任务` |
+
+### 内置 Agent 
+
+| Agent   | 类型     | 擅长                                           | 默认权限                                                 |
+| ------- | -------- | ---------------------------------------------- | -------------------------------------------------------- |
+| Build   | Primary  | 全能开发（默认主 Agent）                       | 全能（可读写文件、执行命令）                             |
+| Plan    | Primary  | 分析代码、规划方案、审查建议                   | 受限（默认禁止编辑，仅 `.opencode/plans/*.md` 允许写入） |
+| Explore | Subagent | 快速找到文件、搜索代码、回答代码库问题         | 只读（可搜索、浏览代码）                                 |
+| General | Subagent | 复杂研究、多步骤任务、不确定能否快速找到答案时 | 多任务执行（可用 Todo 工具                               |
+
+### Plan vs Build
+
+**Plan 模式下 AI 只能编辑计划文件**（`.opencode/plans/*.md`），不能修改源代码。
+
+什么时候用Plan?
+
+| 你的需求       | 推荐模式         | 原因                   |
+| -------------- | ---------------- | ---------------------- |
+| 重构核心模块   | 先 Plan 后 Build | 先分析影响，再动手     |
+| 学习新代码库   | Plan             | 安全探索，不会误改     |
+| 不确定改动影响 | Plan             | 分析完再决定           |
+| 团队协作任务   | 先 Plan 后 Build | 计划可审核，执行可追溯 |
+| 代码审查       | Plan             | 只读分析，不修改       |
+
+
 
 ### Skills（技能系统）
 
