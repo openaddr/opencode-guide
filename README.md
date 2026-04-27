@@ -1,4 +1,26 @@
-# OpenCode 快速入门
+# Agent快速入门-Opencode
+
+# Agent价值
+
+> 我们与客户的合作发现，人工智能代理在以下两种应用场景中展现出巨大潜力，充分体现了前述模式的实际价值。这两种场景都表明，当任务既需要对话又需要行动、具备明确的成功标准、能够形成反馈循环，并且包含有意义的人类监督时，AI 代理的价值最为显著。 ——Anthropic
+
+## 客户支持
+
+客户支持结合了人们熟悉的聊天机器人界面，并通过集成工具来提升功能。这种模式非常适合更开放的智能代理，原因如下：
+
+- 支持的交互通常遵循对话的自然流程，同时还需要获取外部信息并执行相应操作；
+- 可以通过集成工具来获取客户资料、订单历史和知识库文档；
+- 如退款发放和票务更新等操作，都可以通过程序自动完成；
+- 成功可以通过用户设定的目标来明确衡量。
+
+## 编程代理
+
+软件开发领域展现出 LLM 功能的巨大潜力，其能力已从代码补全演进到自主解决问题。代理之所以特别有效，是因为:
+
+- 代码解决方案可以通过自动化测试来验证；
+- 代理可以通过测试结果的反馈不断优化和改进解决方案；
+- 问题的范围清晰且具有结构性；
+- 输出的质量是可以客观评估的。
 
 # 安装配置
 
@@ -338,12 +360,12 @@ opencode upgrade 1.4.6
 
 ### 内置 Agent 
 
-| Agent   | 类型     | 擅长                                           | 默认权限                                                 |
-| ------- | -------- | ---------------------------------------------- | -------------------------------------------------------- |
-| Build   | Primary  | 全能开发（默认主 Agent）                       | 全能（可读写文件、执行命令）                             |
-| Plan    | Primary  | 分析代码、规划方案、审查建议                   | 受限（默认禁止编辑，仅 `.opencode/plans/*.md` 允许写入） |
-| Explore | Subagent | 快速找到文件、搜索代码、回答代码库问题         | 只读（可搜索、浏览代码）                                 |
-| General | Subagent | 复杂研究、多步骤任务、不确定能否快速找到答案时 | 多任务执行（可用 Todo 工具                               |
+| Agent     | 模式     | 默认权限                                                     | 说明                         |
+| --------- | -------- | ------------------------------------------------------------ | ---------------------------- |
+| `Build`   | primary  | 全部允许                                                     | 默认开发 Agent，所有工具可用 |
+| `Plan`    | primary  | edit: deny（仅 `.opencode/plans/*.md` 允许）                 | 只读规划，不修改代码         |
+| `General` | subagent | todoread/todowrite: deny                                     | 通用研究，多步任务           |
+| `Explore` | subagent | 仅允许 grep/glob/list/bash/read/webfetch/websearch/codesearch | 快速代码探索                 |
 
 ### Plan vs Build
 
@@ -359,25 +381,109 @@ opencode upgrade 1.4.6
 | 团队协作任务   | 先 Plan 后 Build | 计划可审核，执行可追溯 |
 | 代码审查       | Plan             | 只读分析，不修改       |
 
-
-
-### Skills（技能系统）
-
-OpenCode 支持扩展技能，详见详细文档。
-
-### MCP（Model Context Protocol）
-
-支持连接外部工具和服务，详见详细文档。
-
-### 自定义命令
-
-在 `~/.config/opencode/commands/` 目录下创建 `.md` 文件即可定义自定义命令。
-
 ---
 
-## 4. 进阶技巧
+## Agent进阶
 
 ### 子代理
+
+#### 运行机制
+
+```txt
+用户 ←→ Primary Agent (build/plan)
+              ↓
+         Task Tool (创建独立 Session)
+              ↓
+         Subagent (explore/general/你的自定义 Agent)
+              ↓
+         返回结果给 Primary
+```
+
+理解子代理的运行机制对于设计高效 Agent 至关重要：
+
+1. **Session 隔离（无历史记忆）** 子代理运行在一个**全新的、独立的 Session** 中。这意味着：
+   - **看不到主 Agent 的对话历史**：它不知道你之前和主 Agent 聊了什么。
+   - **上下文仅包含 Prompt**：它的世界里只有你传给它的任务描述（Prompt）。
+2. **All 模式的双重身份** 当 `mode: "all"` 的 Agent：
+   - **被 Tab 切换时**：它是主 Agent，拥有完整历史记忆。
+   - **被 @ 调用时**：它是子 Agent，受到 Session 隔离限制，看不到调用者的历史。
+
+### 配置位置 
+
+| 位置                            | 作用范围       | 优先级           |
+| ------------------------------- | -------------- | ---------------- |
+| `.opencode/agent/*.md`          | 当前项目       | 高               |
+| `~/.config/opencode/agent/*.md` | 全局所有项目   | 中               |
+| `opencode.json` 的 `agent` 字段 | 取决于文件位置 | 与 Markdown 合并 |
+
+> **文件名即 Agent 名称**：`docs-writer.md` 创建名为 `docs-writer` 的 Agent。
+
+### Agent模板(重要)
+
+```markdown
+---
+description: 描述(推荐写明触发时机)
+mode: subagent
+---
+
+# 角色职责
+
+# 工作流程
+
+# 输出格式
+
+# 约束条件
+
+# 自我检查
+```
+
+### 创建第一个 Agent
+
+```markdown
+---
+description: 你好，世界
+mode: subagent
+permission:
+  edit: deny            # 禁止编辑
+  bash:
+    "*": deny           # 禁止所有命令
+    "git log*": allow   # 只允许查看日志
+  task:
+    "i-love-you": allow           # 禁止调用其他 Agent
+    "thanks": "deny"
+---
+# 角色职责
+你是一个示例Agent
+# 工作流程
+请调用 i-love-you Agent
+# 输出格式
+不涉及
+# 约束条件
+不涉及
+# 自我检查
+不涉及
+```
+
+### 完整配置字段
+
+| 字段          | 类型    | 说明                                                |
+| ------------- | ------- | --------------------------------------------------- |
+| `description` | string  | **建议填**。Agent 简介，影响主 Agent 的自动选择决策 |
+| `mode`        | enum    | `subagent` | `primary` | `all`。默认 `all`          |
+| `model`       | string  | 格式 `provider/model`。不填则继承主 Agent 当前模型  |
+| `prompt`      | string  | 系统提示词（JSON 配置专用，Markdown 中使用正文）    |
+| `temperature` | number  | 0-1，控制回答的随机性                               |
+| `top_p`       | number  | 0-1，核采样参数                                     |
+| `steps`       | number  | 最大迭代步数，防止死循环                            |
+| `hidden`      | boolean | `true` 则从 @ 自动补全菜单中隐藏                    |
+| `color`       | string  | 十六进制颜色 `#RRGGBB`，用于界面区分                |
+| `permission`  | object  | 权限配置对象                                        |
+| `disable`     | boolean | 是否禁用此 Agent                                    |
+| `options`     | object  | 透传参数容器，用于存放不常用的 Provider 参数        |
+
+
+
+## Agent实战示例
 
 #### 超大规模任务时，AI产生畏难情绪
 
@@ -416,28 +522,6 @@ api-analyzer只分析一个yaml：
 ![image-20260423105545323](http://image.huawei.com/tiny-lts/v1/images/hi3ms/5b30b8d8e75fefe5e0669c1d7efb2c32_723x1008.png)
 
 ![image-20260423110146565](http://image.huawei.com/tiny-lts/v1/images/hi3ms/89ac0fbcfd92d50f1a5a45bfee856696_2554x4749.png)
-
-### 常用技巧
-
-- 使用 `cc-switch` 查看历史会话更高效
-  - 下载：https://github.com/farion1231/cc-switch
-
-
-
-### 已知问题
-
-#### 问题 1：思考过程中调用工具导致崩溃
-
-- 症状：输出中出现 `<tool_call>` 标签后异常中断
-- 状态：官方已知 issue，GLM 模型更容易触发
-- 参考：https://github.com/anomalyco/opencode/issues/8877
-
-#### 问题 2：PowerShell 命令不兼容
-
-- 原因：OpenCode 默认使用 PowerShell
-- 解决：配置 SHELL 环境变量指向 Git Bash（如上所示）
-
-- 
 
 ---
 
@@ -490,11 +574,11 @@ https://wiki.huawei.com/domains/171127/wiki/8/WIKI2026032710577003
 重新启动 OpenCode。插件将通过 Bun 自动安装，并自动注册所有技能。
 通过提问验证：“告诉我你的superpowers是什么”
 
+### cc-switch
 
+使用 `cc-switch` 统一管理Skill、MCP；总览历史会话；反代claudecode
 
-```cmd
-npm install superpowers@git+https://github.com/obra/superpowers.git --prefix "%USERPROFILE%\.config\opencode"
-```
+- 下载：https://github.com/farion1231/cc-switch
 
 ## 6.坑
 
@@ -534,8 +618,11 @@ SHELL=D:\App\Git\usr\bin\bash.exe
 
 ### 3. LSP 没有自动下载
 
-- 说明：OpenCode 使用的 LSP 不会自动下载
-- 解决：手动下载, 并配置到path，如 [eclipse-jdtls](https://github.com/eclipse-jdtls/eclipse.jdt.ls)
+> OpenCode 使用的 LSP 不会自动下载
+
+#### 解决方案
+
+手动下载, 并配置到path，如 [eclipse-jdtls](https://github.com/eclipse-jdtls/eclipse.jdt.ls)
 
 ## 附录
 
@@ -613,3 +700,4 @@ SHELL=D:\App\Git\usr\bin\bash.exe
 
 - [Skill 标准](https://agentskills.io/)
 - [OpenCode GitHub](https://github.com/anomalyco/opencode)
+- [构建高效代理](https://www.anthropic.com/engineering/building-effective-agents)
